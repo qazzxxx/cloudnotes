@@ -76,3 +76,23 @@ body {
   background: transparent;
   box-shadow: none;
 }
+
+/* ───────────────────────────────────────────────────────────
+ * 笔记内容区：给 ProseMirror 内部加上下 padding，让首尾块不贴边。
+ * 用 96px 让首/尾段落（尤其空段落时光标位置）离 header / 滚动边界有呼吸感。
+ * ─────────────────────────────────────────────────────────── */
+.cn-editor .ProseMirror {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* ───────────────────────────────────────────────────────────
+ * 编辑区背景：与侧栏、header 区分开，形成「内容卡片」的层次感。
+ * 亮色 = 纯白；暗色 = #1f1f1f（深灰，比 #0b0e14 略浅一级）。
+ * ─────────────────────────────────────────────────────────── */
+.cn-editor-surface {
+  background-color: #ffffff;
+}
+.dark .cn-editor-surface {
+  background-color: #1f1f1f;
+}

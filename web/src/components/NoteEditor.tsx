@@ -202,13 +202,13 @@ function NoteEditorInner({
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="cn-editor-surface flex h-full flex-col">
       <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-black/5 px-6 dark:border-white/10">
         <EditableTitle notePath={notePath} onRename={rename} />
         <SaveBadge state={status} />
       </header>
       <div className="flex-1 overflow-y-auto">
-        <div className="px-6 py-8">
+        <div className="px-1 py-6">
           <BlockNoteView editor={editor} theme={mode} onChange={onChange} className="cn-editor" />
         </div>
       </div>
