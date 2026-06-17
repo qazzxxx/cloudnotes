@@ -1,0 +1,26 @@
+{
+  "name": "cloudnote",
+  "version": "0.1.0",
+  "private": true,
+  "description": "云简 (CloudNote) — 纯文件系统驱动的轻量级 Markdown 笔记/文档管理系统，专为 NAS 极客与开发者设计。",
+  "license": "MIT",
+  "packageManager": "pnpm@10.17.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream run dev",
+    "dev:server": "pnpm --filter @cloudnote/server dev",
+    "dev:web": "pnpm --filter @cloudnote/web dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "start": "pnpm --filter @cloudnote/server start"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "eslint": "^9.15.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.15.0"
+  }
+}

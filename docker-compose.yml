@@ -1,0 +1,24 @@
+# 云简 CloudNote — docker-compose
+# 数据主权：笔记以普通文件存放在宿主机 ROOT_SPACE_HOST 目录（默认 ./notes），直接挂载进容器。
+
+services:
+  cloudnote:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cloudnote:latest
+    container_name: cloudnote
+    restart: unless-stopped
+    ports:
+      - "${PORT_HOST:-3130}:3130"
+    environment:
+      NODE_ENV: production
+      ROOT_SPACE: /data/notes
+      PORT: "3130"
+      NAS_PASSWORD: ${NAS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_EXPIRES_HOURS: ${JWT_EXPIRES_HOURS:-72}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+    volumes:
+      # 宿主机笔记目录 → 容器内根空间。指向你的 NAS 共享路径即可。
+      - ${ROOT_SPACE_HOST:-./notes}:/data/notes

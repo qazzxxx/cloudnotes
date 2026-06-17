@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+/* ───────────────────────────────────────────────────────────
+ * 暗色模式：以 `.dark` 类名触发（与 antd ConfigProvider 联动切换）
+ * ─────────────────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind v4 主题令牌：brand 色可在工具类中用 bg-brand / text-brand 等 */
+@theme {
+  --color-brand: #5b6cff;
+}
+
+:root {
+  color-scheme: light;
+  --cn-bg: #f7f8fa;
+  --cn-fg: #1f2430;
+}
+
+.dark {
+  color-scheme: dark;
+  --cn-bg: #0b0e14;
+  --cn-fg: #e6e8eb;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--cn-bg);
+  color: var(--cn-fg);
+  font-family:
+    'Inter', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 极简滚动条 */
+* {
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
