@@ -6,6 +6,7 @@ import { App, Input, Spin, Typography, type InputRef } from 'antd';
 import { api, getToken } from '../api';
 import { useNotes } from '../context/NotesContext';
 import { useTheme } from '../context/ThemeContext';
+import { blockNoteZhCN } from '../lib/blockNoteDict';
 import {
   displayUrlToRef,
   noteDirOf,
@@ -119,6 +120,7 @@ function NoteEditorInner({
 
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
+    dictionary: blockNoteZhCN,
     uploadFile: async (file: File) => {
       const fd = new FormData();
       fd.append('file', file);
