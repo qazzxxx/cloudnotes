@@ -162,6 +162,40 @@ function NoteEditorInner({
     };
   }, [refresh]);
 
+  // BlockNote 直接通过 DOM API 创建 <img class="bn-visual-media">，默认无 loading="lazy"，
+  // 几十张动辄几 MB 的 GIF 同笔记会一口气全部请求，浪费带宽。
+  // 这里挂个 MutationObserver，给所有新出现的图片加上原生懒加载 + 异步解码。
+  useEffect(() => {
+    const root = editor.domElement;
+    if (!root) return;
+
+    const markLazy = (img: HTMLImageElement) => {
+      // loading="lazy" 浏览器原生支持滚动到视口附近才请求；
+      // decoding="async" 让解码不阻塞主线程。
+      if (img.loading !== 'lazy') img.loading = 'lazy';
+      if (img.decoding !== 'async') img.decoding = 'async';
+    };
+
+    // 先处理一次（笔记初次挂载时已经存在的图片）
+    root.querySelectorAll('img.bn-visual-media').forEach((el) => markLazy(el as HTMLImageElement));
+
+    // 监听后续 DOM 变更：BlockNote 编辑时会动态插入 / 替换图片节点
+    const observer = new MutationObserver((records) => {
+      for (const r of records) {
+        r.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+          if (node.tagName === 'IMG' && node.classList.contains('bn-visual-media')) {
+            markLazy(node as HTMLImageElement);
+          }
+          // 也覆盖子树中新增的图片（一次性 append 整段 HTML 的情况）
+          node.querySelectorAll?.('img.bn-visual-media').forEach((el) => markLazy(el as HTMLImageElement));
+        });
+      }
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [editor]);
+
   const onChange = () => {
     setStatus('saving');
     debounced.schedule();
