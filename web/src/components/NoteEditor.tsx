@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockNoteEditor } from '@blocknote/core';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
@@ -192,13 +192,13 @@ function SaveBadge({ state }: { state: SaveState }) {
   );
 }
 
-/** 复用一个无界面编辑器实例，用于 Markdown↔Blocks 解析。失败则回退为纯文本块。 */
+/** 复用一个无界面编辑器实例（与编辑器同 schema），用于 Markdown↔Blocks 解析。失败则回退为纯文本块。 */
 function useParser() {
-  return useMemo<BlockNoteEditor | null>(() => {
+  return useState<BlockNoteEditor | null>(() => {
     try {
       return BlockNoteEditor.create();
     } catch {
       return null;
     }
-  }, []);
+  })[0];
 }

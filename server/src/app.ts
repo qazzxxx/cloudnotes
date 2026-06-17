@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import cors from 'cors';
 import express, { type Express } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from './config/env';
 import { requireAuth } from './middleware/auth';
@@ -18,8 +20,37 @@ export function createApp(): Express {
   app.use(express.urlencoded({ extended: true }));
   if (!env.isProd) app.use(morgan('dev'));
 
+  // 安全响应头：CSP 放开 inline（BlockNote/antd 为 CSS-in-JS，需 inline style/script）
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          // antd / BlockNote / Vite 均使用内联 style；img 允许 blob（粘贴预览）与同源
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'blob:'],
+          fontSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+        },
+      },
+      // 同源 iframe 嵌入按需保留（默认拒绝）
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+
+  // 登录限流：防密码爆破（每 IP 15 分钟内最多 10 次）
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: '尝试过于频繁，请 15 分钟后再试' },
+  });
+
   // ── 公开接口 ──────────────────────────────────────────────
   app.use('/api/health', healthRouter);
+  app.use('/api/auth/login', loginLimiter);
   app.use('/api/auth', authRouter);
 
   // ── 受保护接口：文件系统操作（需鉴权） ────────────────────

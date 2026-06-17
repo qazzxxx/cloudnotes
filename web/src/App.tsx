@@ -6,10 +6,11 @@ import { NotesProvider } from './context/NotesContext';
 import { antdThemeFor } from './theme';
 import { AppShell } from './components/AppShell';
 import { LoginCard } from './components/LoginCard';
+import { BackendUnreachable } from './components/BackendUnreachable';
 
-/** 鉴权网关：未就绪 → Loading；未登录 → 登录卡；已登录 → 主应用。 */
+/** 鉴权网关：未就绪 → Loading；后端不可达 → 重试页；未登录 → 登录卡；已登录 → 主应用。 */
 function Gate() {
-  const { ready, authed } = useAuth();
+  const { ready, healthError, authed } = useAuth();
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -17,6 +18,7 @@ function Gate() {
       </div>
     );
   }
+  if (healthError) return <BackendUnreachable />;
   if (!authed) return <LoginCard />;
   return (
     <NotesProvider>

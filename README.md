@@ -56,4 +56,4 @@ docker compose up -d --build
 - [x] **Step 3** — 附件处理机制 (assets / 智能清理)
 - [x] **Step 4** — 前端骨架与自定义文件树
 - [x] **Step 5** — BlockNote 集成与自动保存
-- [ ] **Step 6** — UI 打磨与安全完善（登录页、空状态、代码高亮等）
+- [x] **Step 6** — UI 打磨与安全完善

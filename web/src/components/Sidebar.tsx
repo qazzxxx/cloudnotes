@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Button, Space, Tooltip } from 'antd';
-import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
+import { FileAddOutlined, FolderAddOutlined, LogoutOutlined } from '@ant-design/icons';
 import { FileTree } from './FileTree';
 import { ThemeToggle } from './ThemeToggle';
+import { useAuth } from '../context/AuthContext';
 import type { CreatingEntry } from '../types';
 
 /** 左侧栏：品牌区 + 主题切换 + 新建按钮 + 文件树。 */
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const [creating, setCreating] = useState<CreatingEntry | null>(null);
+  const { authEnabled, logout } = useAuth();
 
   return (
     <div className="flex h-full flex-col">
@@ -21,6 +23,18 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </span>
         </div>
         <Space size={2}>
+          {authEnabled && (
+            <Tooltip title="退出登录">
+              <button
+                type="button"
+                onClick={logout}
+                aria-label="退出登录"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[15px] text-gray-500 transition-colors hover:bg-black/[0.05] hover:text-red-500 dark:text-gray-400 dark:hover:bg-white/[0.08]"
+              >
+                <LogoutOutlined />
+              </button>
+            </Tooltip>
+          )}
           <ThemeToggle />
         </Space>
       </div>

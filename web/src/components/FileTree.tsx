@@ -246,10 +246,46 @@ export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
           />
         )}
 
+        {dir && open && node.children?.length === 0 && creating?.parent !== node.path && (
+          <div
+            className="flex items-center gap-1 text-[12px] italic text-gray-400"
+            style={{ height: ROW_H, paddingLeft: (depth + 1) * INDENT + BASE_PAD + 22 }}
+          >
+            空文件夹
+          </div>
+        )}
+
         {dir && open && node.children?.map((c) => renderNode(c, depth + 1))}
       </div>
     );
   };
+
+  // 空笔记树：引导新建
+  if (tree.length === 0) {
+    return (
+      <div className="py-1">
+        {creating?.parent === null && (
+          <InlineCreateRow
+            type={creating.type}
+            depth={0}
+            onCommit={commitCreate}
+            onCancel={() => setCreating(null)}
+          />
+        )}
+        <div className="mt-8 flex flex-col items-center gap-2 px-4 text-center text-gray-400">
+          <FileTextOutlined className="text-3xl opacity-50" />
+          <p className="text-[13px]">还没有笔记</p>
+          <button
+            type="button"
+            onClick={() => setCreating({ parent: null, type: 'file' })}
+            className="mt-1 rounded-full bg-black/[0.04] px-4 py-1.5 text-[12px] text-gray-600 transition-colors hover:bg-black/[0.08] dark:bg-white/[0.06] dark:text-gray-300 dark:hover:bg-white/[0.1]"
+          >
+            + 新建第一篇
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-1">

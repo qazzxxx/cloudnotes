@@ -4,20 +4,31 @@ import { api, clearToken, getToken, setToken } from '../api';
 interface AuthCtx {
   /** 初始健康检查是否完成 */
   ready: boolean;
+  /** 后端不可达时的错误信息（null 表示正常/未出错） */
+  healthError: string | null;
   /** 服务端是否开启鉴权 */
   authEnabled: boolean;
   /** 当前是否已通过鉴权（开放模式恒为 true） */
   authed: boolean;
   login: (password: string) => Promise<void>;
   logout: () => void;
+  retry: () => void;
 }
 
 const Ctx = createContext<AuthCtx>(null!);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
+  const [healthError, setHealthError] = useState<string | null>(null);
   const [authEnabled, setAuthEnabled] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [nonce, setNonce] = useState(0);
+
+  const retry = useCallback(() => {
+    setReady(false);
+    setHealthError(null);
+    setNonce((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -41,7 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthed(false);
         }
       } catch {
-        /* 后端不可达：保持未就绪态由 UI 提示重试 */
+        if (!alive) return;
+        setHealthError('无法连接后端服务，请确认服务已启动。');
       } finally {
         if (alive) setReady(true);
       }
@@ -49,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [nonce]);
 
   const login = useCallback(async (password: string) => {
     const { token } = await api.login(password);
@@ -63,7 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ ready, authEnabled, authed, login, logout }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ ready, healthError, authEnabled, authed, login, logout, retry }}>
+      {children}
+    </Ctx.Provider>
   );
 }
 

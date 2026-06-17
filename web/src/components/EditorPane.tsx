@@ -1,7 +1,12 @@
-import { Empty } from 'antd';
+import { Suspense, lazy } from 'react';
+import { Spin } from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import { useNotes } from '../context/NotesContext';
-import { NoteEditor } from './NoteEditor';
+
+// 懒加载编辑器：把重量级的 BlockNote 拆成独立 chunk，仅在打开笔记时加载。
+const NoteEditor = lazy(() =>
+  import('./NoteEditor').then((m) => ({ default: m.NoteEditor })),
+);
 
 /**
  * 主编辑区：未选中笔记 → 空状态；选中 → 挂载 BlockNote 编辑器。
@@ -12,21 +17,24 @@ export function EditorPane() {
 
   if (!selected) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8">
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={
-            loading ? '加载中…' : (
-              <span className="flex flex-col items-center gap-1">
-                <FileTextOutlined className="text-2xl opacity-40" />
-                选择左侧的笔记，或新建一篇开始
-              </span>
-            )
-          }
-        />
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+        <FileTextOutlined className="text-5xl text-gray-300 dark:text-gray-600" />
+        <div className="text-gray-400">
+          {loading ? '加载中…' : '选择左侧的笔记，或新建一篇开始'}
+        </div>
       </div>
     );
   }
 
-  return <NoteEditor key={selected} notePath={selected} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center">
+          <Spin />
+        </div>
+      }
+    >
+      <NoteEditor key={selected} notePath={selected} />
+    </Suspense>
+  );
 }
