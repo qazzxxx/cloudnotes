@@ -55,3 +55,24 @@ body {
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* ───────────────────────────────────────────────────────────
+ * 笔记标题输入框：常驻在 header 中，外观与普通标题一致。
+ * ─────────────────────────────────────────────────────────── */
+.cn-title-input.ant-input {
+  background: transparent;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  padding: 0;
+  height: 28px;
+  color: inherit;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+.cn-title-input.ant-input:hover,
+.cn-title-input.ant-input:focus,
+.cn-title-input.ant-input-focused {
+  background: transparent;
+  box-shadow: none;
+}

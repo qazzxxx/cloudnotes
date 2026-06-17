@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BlockNoteEditor } from '@blocknote/core';
 import { useCreateBlockNote } from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
-import { App, Spin, Typography } from 'antd';
+import { App, Input, Spin, Typography, type InputRef } from 'antd';
 import { api, getToken } from '../api';
 import { useNotes } from '../context/NotesContext';
 import { useTheme } from '../context/ThemeContext';
@@ -86,7 +86,7 @@ function NoteEditorInner({
 }) {
   const { message } = App.useApp();
   const { mode } = useTheme();
-  const { refresh } = useNotes();
+  const { refresh, rename } = useNotes();
   const noteDir = noteDirOf(notePath);
 
   const [status, setStatus] = useState<SaveState>('saved');
@@ -165,12 +165,12 @@ function NoteEditorInner({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-[52px] shrink-0 items-center justify-between border-b border-black/5 px-6 dark:border-white/10">
-        <span className="truncate text-[15px] font-medium">{noteTitleOf(notePath)}</span>
+      <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-black/5 px-6 dark:border-white/10">
+        <EditableTitle notePath={notePath} onRename={rename} />
         <SaveBadge state={status} />
       </header>
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[760px] px-6 py-8">
+        <div className="px-6 py-8">
           <BlockNoteView editor={editor} theme={mode} onChange={onChange} className="cn-editor" />
         </div>
       </div>
@@ -201,4 +201,70 @@ function useParser() {
       return null;
     }
   })[0];
+}
+
+/**
+ * 顶部标题：一个常驻的无边框输入框。
+ * - Enter / 失焦提交重命名（自动补 .md）；
+ * - Esc 取消并回滚到当前标题；
+ * - 切换笔记时输入框值跟随更新。
+ */
+function EditableTitle({
+  notePath,
+  onRename,
+}: {
+  notePath: string;
+  onRename: (from: string, to: string) => Promise<void>;
+}) {
+  const { message } = App.useApp();
+  const [value, setValue] = useState(noteTitleOf(notePath));
+  const inputRef = useRef<InputRef>(null);
+  const committed = useRef(false);
+
+  // 切换笔记时同步显示
+  useEffect(() => {
+    setValue(noteTitleOf(notePath));
+  }, [notePath]);
+
+  const commit = async () => {
+    if (committed.current) return;
+    const next = value.trim();
+    if (!next || next === noteTitleOf(notePath)) {
+      setValue(noteTitleOf(notePath));
+      return;
+    }
+    committed.current = true;
+    const fileName = next.endsWith('.md') ? next : `${next}.md`;
+    const lastSlash = notePath.lastIndexOf('/');
+    const parent = lastSlash === -1 ? '' : notePath.slice(0, lastSlash);
+    const to = parent ? `${parent}/${fileName}` : fileName;
+    try {
+      await onRename(notePath, to);
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '重命名失败');
+      setValue(noteTitleOf(notePath));
+    } finally {
+      queueMicrotask(() => {
+        committed.current = false;
+      });
+    }
+  };
+
+  return (
+    <Input
+      ref={inputRef}
+      variant="borderless"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onPressEnter={() => void commit()}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          setValue(noteTitleOf(notePath));
+          inputRef.current?.blur();
+        }
+      }}
+      onBlur={() => void commit()}
+      className="cn-title-input !min-w-0 flex-1 !px-0"
+    />
+  );
 }
