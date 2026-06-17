@@ -7,6 +7,7 @@ import { api, getToken } from '../api';
 import { useNotes } from '../context/NotesContext';
 import { useTheme } from '../context/ThemeContext';
 import { blockNoteZhCN } from '../lib/blockNoteDict';
+import { blockNoteSchema, createBlockNoteParser } from '../lib/blockNoteSchema';
 import {
   displayUrlToRef,
   noteDirOf,
@@ -120,6 +121,7 @@ function NoteEditorInner({
 
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
+    schema: blockNoteSchema,
     dictionary: blockNoteZhCN,
     uploadFile: async (file: File) => {
       const fd = new FormData();
@@ -194,15 +196,9 @@ function SaveBadge({ state }: { state: SaveState }) {
   );
 }
 
-/** 复用一个无界面编辑器实例（与编辑器同 schema），用于 Markdown↔Blocks 解析。失败则回退为纯文本块。 */
+/** 复用一个无界面编辑器实例（与编辑器同 schema），用于 Markdown↔Blocks 解析。失败则回退为默认 schema。 */
 function useParser() {
-  return useState<BlockNoteEditor | null>(() => {
-    try {
-      return BlockNoteEditor.create();
-    } catch {
-      return null;
-    }
-  })[0];
+  return useState<BlockNoteEditor | null>(() => createBlockNoteParser())[0];
 }
 
 /**
