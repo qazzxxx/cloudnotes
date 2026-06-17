@@ -15,11 +15,19 @@ export function refToDisplayUrl(ref: string, noteDir: string): string {
   const clean = ref.replace(/^\.\//, '').replace(/^\/+/, '');
   let rootRel: string;
   if (clean.startsWith('assets/')) {
+    // 存的是「assets/xxx」—— 拼上 noteDir 还原根相对路径
     rootRel = noteDir ? `${noteDir}/assets/${clean.slice('assets/'.length)}` : clean;
   } else if (clean.includes('/assets/')) {
-    rootRel = clean; // 已带目录前缀（根相对）
+    // 已带目录前缀的「dir/assets/xxx」—— 原样作为根相对路径
+    rootRel = clean;
+  } else if (!clean.includes('/')) {
+    // 裸文件名（同级目录资源）—— 视为 noteDir 下的附件
+    // 这样既支持 `![轮播图](155311xxx.gif)` 这种同级引用，
+    // 也兼容只放一个子目录的笔记把附件与 .md 摆在同一层。
+    rootRel = noteDir ? `${noteDir}/${clean}` : clean;
   } else {
-    return ref; // 非附件，原样返回
+    // 其他含 / 的非 assets 引用 —— 原样返回（外部域名解析走 EXTERNAL_RE，这里是相对路径）
+    return ref;
   }
   return api.assetUrl(rootRel);
 }
