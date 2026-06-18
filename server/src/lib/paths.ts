@@ -16,7 +16,7 @@ export const MD_EXT = '.md';
 export const ASSETS_DIR = 'assets';
 
 /** 树状结构中需要隐藏的目录/文件名。 */
-const HIDDEN_NAMES = new Set<string>(['node_modules', ASSETS_DIR, '$RECYCLE.BIN', '.Trash-1000']);
+const HIDDEN_NAMES = new Set<string>(['node_modules', '$RECYCLE.BIN', '.Trash-1000']);
 
 /** 单个文件名中禁止出现的字符（用集合判定，规避正则转义问题）。 */
 const FORBIDDEN_NAME_CHARS = new Set('<>:"|?*\\/'.split(''));

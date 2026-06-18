@@ -4,6 +4,7 @@ import { env } from '../config/env';
 import { cleanupAssetsForDeletedNote } from './assets';
 import {
   FsError,
+  ASSETS_DIR,
   isHiddenEntry,
   isMarkdown,
   joinRel,
@@ -54,6 +55,9 @@ async function readDirChildren(absDir: string, relDir: string): Promise<TreeNode
     return []; // 无权限 / 不存在的子目录静默跳过
   }
 
+  // assets 目录（笔记同级附件）下原样展示所有文件（图片等非 md 附件）；其余目录仅展示 .md
+  const insideAssets = relDir.split('/').some((seg) => seg === ASSETS_DIR);
+
   const nodes: TreeNode[] = [];
   await Promise.all(
     entries.map(async (entry) => {
@@ -67,7 +71,7 @@ async function readDirChildren(absDir: string, relDir: string): Promise<TreeNode
           type: 'dir',
           children: await readDirChildren(abs, rel),
         });
-      } else if (entry.isFile() && isMarkdown(entry.name)) {
+      } else if (entry.isFile() && (insideAssets || isMarkdown(entry.name))) {
         nodes.push({ name: entry.name, path: rel, type: 'file' });
       }
     }),
@@ -76,7 +80,7 @@ async function readDirChildren(absDir: string, relDir: string): Promise<TreeNode
   return nodes;
 }
 
-/** 读取整棵笔记树（仅目录 + .md 文件）。 */
+/** 读取整棵笔记树（目录 + .md 文件；assets 目录下含附件）。 */
 export async function readTree(): Promise<TreeNode[]> {
   return readDirChildren(env.rootSpace, '');
 }

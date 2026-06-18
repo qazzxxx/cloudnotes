@@ -3,12 +3,15 @@ import { App, Input, type InputRef } from 'antd';
 import {
   CaretRightFilled,
   DeleteOutlined,
+  DownloadOutlined,
   EditOutlined,
   FileAddOutlined,
+  FileImageOutlined,
   FileTextOutlined,
   FolderAddOutlined,
   FolderOpenOutlined,
   FolderOutlined,
+  PaperClipOutlined,
 } from '@ant-design/icons';
 import {
   DndContext,
@@ -23,6 +26,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { useNotes } from '../context/NotesContext';
+import { api } from '../api';
 import type { CreatingEntry, TreeNode } from '../types';
 
 const ROW_H = 30;
@@ -40,6 +44,13 @@ function parentOf(path: string): string | null {
 }
 function titleOf(name: string): string {
   return name.replace(/\.md$/i, '');
+}
+
+/** 常见图片扩展名（用于给附件配上图片图标）。 */
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif|ico|heic)$/i;
+/** 是否为非 Markdown 的附件文件（assets 目录下的图片等）。 */
+function isAssetFile(name: string): boolean {
+  return !name.toLowerCase().endsWith('.md');
 }
 /** 判断 `ancestor` 是否是 `descendant` 的祖先或自身。 */
 function isAncestorOrSelf(ancestor: string, descendant: string): boolean {
@@ -170,11 +181,14 @@ export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
   // ── 删除确认 ───────────────────────────────────────────────
   const confirmDelete = (node: TreeNode) => {
     const isDir = node.type === 'dir';
+    const asset = !isDir && isAssetFile(node.name);
     modal.confirm({
-      title: isDir ? '删除文件夹？' : '删除笔记？',
+      title: isDir ? '删除文件夹？' : asset ? '删除附件？' : '删除笔记？',
       content: isDir
         ? `「${node.name}」及其所有内容将被永久删除。`
-        : `「${titleOf(node.name)}」将被删除，关联的孤儿图片也会被自动清理。`,
+        : asset
+          ? `「${node.name}」将被删除，引用它的笔记可能出现图片失效。`
+          : `「${titleOf(node.name)}」将被删除，关联的孤儿图片也会被自动清理。`,
       okText: '删除',
       okType: 'danger',
       cancelText: '取消',
@@ -309,6 +323,26 @@ export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
       ];
     }
     const isDir = node.type === 'dir';
+    // 附件文件（assets 下的非 md）：只提供下载 / 删除。
+    // 重命名会破坏笔记里的图片引用，且后端 rename 仅放行 .md，故不提供。
+    if (!isDir && isAssetFile(node.name)) {
+      return [
+        {
+          key: 'download',
+          icon: <DownloadOutlined />,
+          label: '下载',
+          onClick: () => window.open(api.assetUrl(node.path), '_blank'),
+        },
+        { type: 'divider', key: 'div' },
+        {
+          key: 'delete',
+          icon: <DeleteOutlined />,
+          label: '删除',
+          danger: true,
+          onClick: () => confirmDelete(node),
+        },
+      ];
+    }
     // 在「此处新建」时使用的父目录：文件夹就是它自身；文件则是它的父目录
     const hereParent = isDir ? node.path : parentOf(node.path);
     return [
@@ -576,14 +610,17 @@ function TreeRow(props: TreeRowProps) {
   } = props;
 
   const dir = node.type === 'dir';
+  const asset = !dir && isAssetFile(node.name);
   const open = expanded.has(node.path);
   const isSelected = node.path === selected;
   const isRenaming = renaming === node.path;
   const padLeft = depth * INDENT + BASE_PAD;
 
   // 拖拽源 —— 文件/文件夹都可以拖。正在拖时降低自身透明度，让 DragOverlay 更显眼
+  // 附件不可拖：拖拽落点会触发 rename，而后端 rename 仅放行 .md，且重命名会破坏笔记里的引用。
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: node.path,
+    disabled: asset,
   });
 
   // 文件夹作为放置目标。文件不作为目标（避免误把 A 笔记丢到 B 笔记「上」造成混乱）
@@ -658,6 +695,7 @@ function TreeRow(props: TreeRowProps) {
       return;
     }
     if (dir) toggle(node.path);
+    else if (asset) window.open(api.assetUrl(node.path), '_blank', 'noopener');
     else setSelected(node.path);
   };
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -731,6 +769,12 @@ function TreeRow(props: TreeRowProps) {
               <FolderOpenOutlined style={{ color: 'var(--ant-color-primary)' }} />
             ) : (
               <FolderOutlined className="text-amber-400" />
+            )
+          ) : asset ? (
+            IMAGE_EXT_RE.test(node.name) ? (
+              <FileImageOutlined className="text-gray-400" />
+            ) : (
+              <PaperClipOutlined className="text-gray-400" />
             )
           ) : (
             <FileTextOutlined className="text-gray-400" />
