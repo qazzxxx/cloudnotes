@@ -53,11 +53,39 @@ docker compose up -d --build
 # 访问 http://<NAS-IP>:3130
 ```
 
-## 开发执行进度
+## 部署到 NAS（推荐 · 一键 docker compose）
 
-- [x] **Step 1** — 项目初始化 (Monorepo / TS / ESLint / Docker / 鉴权环境变量)
-- [x] **Step 2** — 后端核心 API (目录树 / 读 / 写 / 增删改)
-- [x] **Step 3** — 附件处理机制 (assets / 智能清理)
-- [x] **Step 4** — 前端骨架与自定义文件树
-- [x] **Step 5** — BlockNote 集成与自动保存
-- [x] **Step 6** — UI 打磨与安全完善
+适用：群晖 / 威联通 / unRAID / 其他能跑 Docker 的 NAS 或 Linux 小主机。镜像已发布到 Docker Hub（`qazzxxx/cloudnotes`），**无需本地构建**。
+
+```yaml
+# 云简 CloudNote —— NAS 一键部署配置
+services:
+  cloudnote:
+    image: qazzxxx/cloudnotes:latest   # 启动后会自动拉最新镜像
+    container_name: cloudnote
+    restart: unless-stopped
+    ports:
+      - "3130:3130"                    # 左侧是宿主机端口，按需改
+    environment:
+      NODE_ENV: production
+      ROOT_SPACE: /data/notes
+      PORT: "3130"
+      # 🔧 1. 把 qaz123 改成你自己的访问密码（首次登录用）
+      NAS_PASSWORD: "your_secure_password_here"
+      # 🔧 2. 强烈建议填一个长随机串（openssl rand -hex 32）。
+      #       留空 = 后端启动时随机生成，容器重启后所有 token 失效。
+      JWT_SECRET: ""
+      JWT_EXPIRES_HOURS: "72"
+      CORS_ORIGIN: ""
+    volumes:
+      # 🔧 3. 左侧改为你 NAS 上实际存放笔记的目录（与步骤 1 一致）
+      - ./notes:/data/notes
+```
+
+### 备份 / 迁移
+
+整份笔记 = 宿主机挂载目录里的 `.md` + `assets/`。`tar` / `rsync` / Synology Hyper Backup 任意一种都能备份：
+
+```bash
+tar -czf cloudnotes-backup-$(date +%Y%m%d).tar.gz /volume1/docker/cloudnotes/notes
+```
