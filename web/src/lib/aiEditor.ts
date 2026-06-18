@@ -22,8 +22,9 @@ function authedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Resp
 export function createAIExtensionFor(modelName: string) {
   const provider = createOpenAICompatible({
     name: 'cloudnote-ai',
-    // baseURL 同源 /api/ai：openai-compatible 会拼成 /api/ai/chat/completions
-    baseURL: '/api/ai',
+    // 必须用绝对 URL：AI SDK 用 new URL(baseURL + path) 构造请求地址，相对路径会抛 Invalid URL。
+    // dev 下 origin=5173 由 Vite 代理 /api→后端；prod 下与服务端同源。
+    baseURL: `${window.location.origin}/api/ai`,
     apiKey: 'unused', // 真实 Key 由后端代理注入，这里占位
     fetch: authedFetch,
   });
