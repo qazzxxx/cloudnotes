@@ -4,6 +4,7 @@ import type {
   LoginResult,
   NoteFile,
   TreeNode,
+  WriteResult,
 } from './types';
 
 /**
@@ -80,7 +81,7 @@ export const api = {
     request<NoteFile>(`/api/fs/file?path=${enc(path)}`),
 
   writeFile: (path: string, content: string) =>
-    request<NoteFile>(`/api/fs/file?path=${enc(path)}`, {
+    request<WriteResult>(`/api/fs/file?path=${enc(path)}`, {
       method: 'PUT',
       body: JSON.stringify({ content }),
     }),

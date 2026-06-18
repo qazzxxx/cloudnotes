@@ -108,14 +108,16 @@ function NoteEditorInner({
     }
     setStatus('saving');
     try {
-      await api.writeFile(notePath, md);
+      const res = await api.writeFile(notePath, md);
       lastSavedMd.current = md;
       setStatus('saved');
+      // 保存时若回收了孤儿附件（如删掉图片块），刷新文件树让对应节点及时消失
+      if (res.removedAssets?.length) void refresh();
     } catch (e) {
       setStatus('error');
       message.error(e instanceof Error ? e.message : '保存失败');
     }
-  }, [notePath, noteDir, message]);
+  }, [notePath, noteDir, message, refresh]);
 
   const debounced = useDebouncedCallback(doSave, 800);
 

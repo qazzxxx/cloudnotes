@@ -218,3 +218,92 @@ export async function cleanupAssetsForDeletedNote(
 
   return { removed, kept };
 }
+
+/**
+ * 一篇 .md 保存后，回收其同级 assets 目录里的孤儿附件：
+ * 删除「当前正文 + 同级其他 .md 均未引用」的附件，避免误删共享图片。
+ * 用于编辑器中删掉图片块后及时回收对应文件。
+ *
+ * 性能：先算候选孤儿，若无候选（如纯文字编辑）直接返回、不读同级笔记，
+ * 保证常规保存开销极小；只有真有候选时才扫描同级。
+ */
+export async function cleanupOrphanAssetsForNote(
+  noteAbs: string,
+  currentContent: string,
+): Promise<CleanupResult> {
+  const noteRelPath = path.relative(env.rootSpace, noteAbs).split(path.sep).join('/');
+  const { absAssetsDir, relAssetsDir } = assetsDirForNote(noteRelPath);
+  const noteDirAbs = path.dirname(noteAbs);
+  const noteDirRelRaw = path.relative(env.rootSpace, noteDirAbs).split(path.sep).join('/');
+  const noteDirRel = noteDirRelRaw === '.' ? '' : noteDirRelRaw;
+  const selfName = path.basename(noteAbs);
+
+  // 1. assets 目录里实际存在的附件
+  let assetEntries: Dirent[];
+  try {
+    assetEntries = await fs.readdir(absAssetsDir, { withFileTypes: true });
+  } catch {
+    return { removed: [], kept: [] }; // 无 assets 目录
+  }
+  const existing = assetEntries.filter((e) => e.isFile()).map((e) => `${relAssetsDir}/${e.name}`);
+  if (existing.length === 0) return { removed: [], kept: [] };
+
+  // 2. 当前正文引用的附件
+  const referenced = new Set<string>();
+  for (const ref of extractAssetRefs(currentContent)) {
+    const rr = refToRootRel(ref, noteDirRel);
+    if (rr) referenced.add(rr);
+  }
+
+  // 3. 候选孤儿：存在但当前正文未引用。无候选则短路返回（不读同级）。
+  if (existing.every((p) => referenced.has(p))) return { removed: [], kept: existing };
+
+  // 4. 同级其他 .md 引用的附件（保护共享图片）——仅在有候选时才读
+  const siblingRefs = new Set<string>();
+  let siblings: Dirent[] = [];
+  try {
+    siblings = await fs.readdir(noteDirAbs, { withFileTypes: true });
+  } catch {
+    siblings = [];
+  }
+  await Promise.all(
+    siblings.map(async (e) => {
+      if (!e.isFile() || !isMarkdown(e.name) || e.name === selfName) return;
+      try {
+        const content = await fs.readFile(path.join(noteDirAbs, e.name), 'utf8');
+        for (const ref of extractAssetRefs(content)) {
+          const rr = refToRootRel(ref, noteDirRel);
+          if (rr) siblingRefs.add(rr);
+        }
+      } catch {
+        /* 单文件读取失败不影响整体 */
+      }
+    }),
+  );
+
+  // 5. 删除既未被当前正文、也未被同级引用的附件
+  const removed: string[] = [];
+  const kept: string[] = [];
+  for (const p of existing) {
+    if (referenced.has(p) || siblingRefs.has(p)) {
+      kept.push(p);
+      continue;
+    }
+    try {
+      await fs.unlink(resolveWithinRoot(p));
+      removed.push(p);
+    } catch {
+      /* 文件可能已不存在 */
+    }
+  }
+
+  // 6. 尽力清理空的 assets 目录
+  try {
+    const left = await fs.readdir(absAssetsDir);
+    if (left.length === 0) await fs.rmdir(absAssetsDir);
+  } catch {
+    /* 非空或无权限，忽略 */
+  }
+
+  return { removed, kept };
+}

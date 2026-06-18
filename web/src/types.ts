@@ -18,6 +18,11 @@ export interface NoteFile {
   size: number;
 }
 
+/** PUT /file 保存结果：NoteFile + 本次保存回收的孤儿附件（根相对路径）。 */
+export interface WriteResult extends NoteFile {
+  removedAssets?: string[];
+}
+
 export interface HealthInfo {
   status: string;
   service: string;

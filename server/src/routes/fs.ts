@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import { Router } from 'express';
 import multer from 'multer';
 import { asyncHandler } from '../lib/asyncHandler';
-import { MAX_ASSET_BYTES, saveAsset } from '../lib/assets';
+import { MAX_ASSET_BYTES, cleanupOrphanAssetsForNote, saveAsset } from '../lib/assets';
 import {
   createEntry,
   deleteEntry,
@@ -52,8 +52,18 @@ fsRouter.put(
     if (typeof content !== 'string') {
       throw new FsError(400, '请求体缺少 content 字符串');
     }
-    const note = await writeNote(pathQuery(req.query.path), content);
-    res.json(note);
+    const relPath = pathQuery(req.query.path);
+    const note = await writeNote(relPath, content);
+    // 保存后回收孤儿附件：编辑器里删掉图片块 → 该附件不再被引用 → 及时删除。
+    // 清理失败不应影响保存结果，吞掉异常。
+    let removedAssets: string[] = [];
+    try {
+      const cleanup = await cleanupOrphanAssetsForNote(resolveWithinRoot(relPath), content);
+      removedAssets = cleanup.removed;
+    } catch {
+      /* 清理失败不影响保存 */
+    }
+    res.json({ ...note, removedAssets });
   }),
 );
 
