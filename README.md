@@ -6,9 +6,29 @@
 
 <p align="center">纯文件系统驱动的轻量级 Markdown 笔记 / 文档管理系统。专为 NAS 极客与开发者设计。</p>
 
+- **✨ 内置 AI 助手**：接入任意 OpenAI 兼容大模型（DeepSeek / MiniMax / OpenAI / 本地 Ollama），选中文本即可润色 / 总结 / 续写 / 纠错，或 `/ai` 自由提问。模型 Key 仅存服务端，绝不暴露给前端。
 - **零数据库**：不依赖 MySQL / SQLite，所有数据以纯 `.md` 文本与原始目录层级直接落盘。
 - **100% 数据主权**：笔记就是你硬盘上的普通文件，任意同步盘 / `rsync` / Git 即可备份。
 - **本地优先 (Local-first)**：私人部署，极简 JWT 鉴权。
+
+## ✨ AI 助手（可选 · 接入任意大模型）
+
+编辑器内置 AI：选中文本点 AI 按钮即可**润色 / 总结 / 续写 / 纠错**，或输入 `/ai` 自由提问；模型流式写入文档，结果可一键接受或撤销。
+
+- **任意 OpenAI 兼容模型**：DeepSeek、MiniMax、OpenAI、Moonshot、本地 Ollama / LM Studio 等都能接。
+- **Key 不出服务端**：浏览器 → 你的后端代理 → 模型提供商，API Key 只存在于容器环境变量，前端永远拿不到。
+- **未配置即无 AI**：留空以下三个变量，编辑器与普通版完全一致，零影响。
+
+只需在 `.env` 或 `docker-compose.yml` 填三行（任选一家提供商）：
+
+| 提供商 | `AI_BASE_URL` | `AI_MODEL` 示例 |
+| --- | --- | --- |
+| DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
+| MiniMax | `https://api.minimaxi.com/v1` | `MiniMax-M2.7` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
+| 本地 Ollama | `http://<nas-ip>:11434/v1` | `qwen2.5` |
+
+> ⚠️ MiniMax 务必用 `/v1`（OpenAI 兼容端点），**不要**用 `/anthropic`。
 
 ## 技术栈
 
@@ -17,7 +37,7 @@
 | 语言 | TypeScript (全栈) |
 | 后端 | Node.js + Express |
 | 前端 | React + Ant Design + Tailwind CSS |
-| 编辑器 | BlockNote |
+| 编辑器 | BlockNote + BlockNote AI（`@blocknote/xl-ai`） |
 | 构建 | Vite (前端) · tsc (后端) |
 | 部署 | Docker · docker-compose |
 
@@ -77,6 +97,12 @@ services:
       JWT_SECRET: ""
       JWT_EXPIRES_HOURS: "72"
       CORS_ORIGIN: ""
+      # ── AI 助手（可选，OpenAI 兼容）── 三项都填才启用；留空 = 编辑器无 AI。Key 仅存服务端。
+      # DeepSeek 示例：AI_BASE_URL=https://api.deepseek.com/v1 / AI_MODEL=deepseek-chat
+      # MiniMax 示例：AI_BASE_URL=https://api.minimaxi.com/v1 / AI_MODEL=MiniMax-M2.7
+      AI_BASE_URL: ""
+      AI_API_KEY: ""
+      AI_MODEL: ""
     volumes:
       # 🔧 3. 左侧改为你 NAS 上实际存放笔记的目录（与步骤 1 一致）
       - ./notes:/data/notes

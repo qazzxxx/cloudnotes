@@ -19,6 +19,18 @@ services:
       JWT_SECRET: ""
       JWT_EXPIRES_HOURS: "72"
       CORS_ORIGIN: ""
+      # ── AI 助手（可选，OpenAI 兼容）──
+      # 三项都填才会启用编辑器内的 AI 功能（选中文本润色/总结/续写/纠错、/ai 命令）；
+      # 留空则编辑器无 AI，与普通版完全一致。API Key 仅存服务端，不暴露给前端。
+      #
+      # 常见配置（任选一家）：
+      #   DeepSeek  AI_BASE_URL=https://api.deepseek.com/v1   AI_MODEL=deepseek-chat
+      #   MiniMax   AI_BASE_URL=https://api.minimaxi.com/v1   AI_MODEL=MiniMax-M2.7  （用 /v1，勿用 /anthropic）
+      #   OpenAI    AI_BASE_URL=https://api.openai.com/v1     AI_MODEL=gpt-4o-mini
+      #   本地 Ollama AI_BASE_URL=http://<nas-ip>:11434/v1    AI_MODEL=qwen2.5  （Key 随意填）
+      AI_BASE_URL: ""
+      AI_API_KEY: ""
+      AI_MODEL: ""
     volumes:
       # 宿主机 NAS 上的笔记目录 → 容器 /data/notes。
       # /volume1/docker/cloudnotes/notes 是群晖默认路径示例，请按你 NAS 实际位置修改。
