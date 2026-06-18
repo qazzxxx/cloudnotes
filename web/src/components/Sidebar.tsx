@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Space, Tooltip } from 'antd';
 import { FileAddOutlined, FolderAddOutlined, LogoutOutlined } from '@ant-design/icons';
 import { FileTree } from './FileTree';
+import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 import type { CreatingEntry } from '../types';
@@ -16,7 +17,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* 品牌区 */}
       <div className="flex h-[52px] shrink-0 items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <span className="text-[18px]">☁️</span>
+          <Logo size={28} />
           <span className="text-[15px] font-semibold tracking-tight">云简</span>
           <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
             CloudNote

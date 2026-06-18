@@ -1,0 +1,17 @@
+{
+  "name": "云简 CloudNote",
+  "short_name": "云简",
+  "description": "纯文件系统驱动的轻量级 Markdown 笔记 / 文档管理系统",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0b0e14",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

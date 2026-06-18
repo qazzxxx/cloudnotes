@@ -3,6 +3,7 @@ import { Drawer } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import { Sidebar } from './Sidebar';
 import { EditorPane } from './EditorPane';
+import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
@@ -27,7 +28,10 @@ export function AppShell() {
           >
             <MenuOutlined />
           </button>
-          <span className="text-[15px] font-medium">☁️ 云简</span>
+          <div className="flex items-center gap-1.5">
+            <Logo size={22} />
+            <span className="text-[15px] font-medium">云简</span>
+          </div>
           <ThemeToggle />
         </header>
         <main className="flex flex-1 flex-col overflow-hidden">
@@ -41,7 +45,7 @@ export function AppShell() {
           styles={{ body: { padding: 0 } }}
           title={
             <div className="flex items-center gap-2">
-              <span>☁️</span>
+              <Logo size={22} />
               <span className="font-medium">云简</span>
             </div>
           }

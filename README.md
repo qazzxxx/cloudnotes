@@ -1,6 +1,10 @@
-# 云简 · CloudNote
+<p align="center">
+  <img src="web/public/logo.svg" width="96" height="96" alt="云简 CloudNote logo" />
+</p>
 
-> 纯文件系统驱动的轻量级 Markdown 笔记 / 文档管理系统。专为 NAS 极客与开发者设计。
+<h1 align="center">云简 · CloudNote</h1>
+
+<p align="center">纯文件系统驱动的轻量级 Markdown 笔记 / 文档管理系统。专为 NAS 极客与开发者设计。</p>
 
 - **零数据库**：不依赖 MySQL / SQLite，所有数据以纯 `.md` 文本与原始目录层级直接落盘。
 - **100% 数据主权**：笔记就是你硬盘上的普通文件，任意同步盘 / `rsync` / Git 即可备份。

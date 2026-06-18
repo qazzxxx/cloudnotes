@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 深色科技背景 (Slate 渐变) -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <!-- 主题青蓝渐变 -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角矩形底板 (现代 App 标准 squircle) -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+
+  <!-- 核心图形组合：Markdown 块 + 文档行 + 节点圆点 -->
+  <g transform="translate(106, 126)">
+    <!-- 倾斜的 "/" 块：暗示斜杠命令 / Markdown 触发 -->
+    <rect x="30" y="20" width="60" height="220" rx="20" transform="rotate(15, 60, 130)" fill="url(#accentGrad)" />
+    <!-- 两条文档行：暗示层级分明的 Block 块 -->
+    <rect x="140" y="50" width="130" height="50" rx="16" fill="#38BDF8" opacity="0.95" />
+    <rect x="120" y="150" width="160" height="50" rx="16" fill="#818CF8" opacity="0.95" />
+    <!-- 一个圆点：节点 / 云端锚 -->
+    <circle cx="280" cy="75" r="14" fill="#E2E8F0" />
+  </g>
+</svg>
