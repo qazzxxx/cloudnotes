@@ -15,7 +15,8 @@
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm -r run typecheck",
-    "start": "pnpm --filter @cloudnote/server start"
+    "start": "pnpm --filter @cloudnote/server start",
+    "release": "bash release.sh"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
