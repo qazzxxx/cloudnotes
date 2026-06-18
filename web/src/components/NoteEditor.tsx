@@ -203,7 +203,7 @@ function NoteEditorInner({
 
   return (
     <div className="cn-editor-surface flex h-full flex-col">
-      <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-black/5 px-6 dark:border-white/10">
+      <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-black/5 pl-14 pr-6 dark:border-white/10">
         <EditableTitle notePath={notePath} onRename={rename} />
         <SaveBadge state={status} />
       </header>
