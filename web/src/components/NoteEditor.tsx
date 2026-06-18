@@ -1,13 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { BlockNoteEditor } from '@blocknote/core';
-import { useCreateBlockNote } from '@blocknote/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BlockNoteEditor, filterSuggestionItems } from '@blocknote/core';
+import {
+  FormattingToolbar,
+  FormattingToolbarController,
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
+  getFormattingToolbarItems,
+  useCreateBlockNote,
+} from '@blocknote/react';
 import { BlockNoteView } from '@blocknote/mantine';
+import { AIToolbarButton, AIMenuController, getAISlashMenuItems } from '@blocknote/xl-ai';
+import { zh as aiZh } from '@blocknote/xl-ai/locales';
 import { App, Input, Spin, Typography, type InputRef } from 'antd';
 import { api, getToken } from '../api';
 import { useNotes } from '../context/NotesContext';
 import { useTheme } from '../context/ThemeContext';
 import { blockNoteZhCN } from '../lib/blockNoteDict';
 import { blockNoteSchema, createBlockNoteParser } from '../lib/blockNoteSchema';
+import { createAIExtensionFor } from '../lib/aiEditor';
+import { useAIConfig } from '../lib/useAIConfig';
+import { CloudNoteAIMenu } from './aiCommands';
 import {
   displayUrlToRef,
   noteDirOf,
@@ -28,6 +40,7 @@ export function NoteEditor({ notePath }: { notePath: string }) {
   const { message } = App.useApp();
   const parser = useParser();
   const noteDir = noteDirOf(notePath);
+  const ai = useAIConfig();
 
   const [state, setState] = useState<{ loading: boolean; blocks: Blocks | null; error?: string }>({
     loading: true,
@@ -60,7 +73,7 @@ export function NoteEditor({ notePath }: { notePath: string }) {
     };
   }, [notePath, noteDir, parser, message]);
 
-  if (state.loading) {
+  if (state.loading || ai == null) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <Spin />
@@ -75,21 +88,31 @@ export function NoteEditor({ notePath }: { notePath: string }) {
     );
   }
 
-  return <NoteEditorInner key={notePath} notePath={notePath} initialBlocks={state.blocks} />;
+  return (
+    <NoteEditorInner key={notePath} notePath={notePath} initialBlocks={state.blocks} ai={ai} />
+  );
 }
 
 /** 内层：仅在 blocks 就绪后挂载，useCreateBlockNote 的 initialContent 一次性生效。 */
 function NoteEditorInner({
   notePath,
   initialBlocks,
+  ai,
 }: {
   notePath: string;
   initialBlocks: Blocks;
+  ai: { enabled: boolean; model: string };
 }) {
   const { message } = App.useApp();
   const { mode } = useTheme();
   const { refresh, rename } = useNotes();
   const noteDir = noteDirOf(notePath);
+
+  // AI 扩展仅在启用时构造一次（model → transport → extension）
+  const aiExtension = useMemo(
+    () => (ai.enabled ? createAIExtensionFor(ai.model) : null),
+    [ai.enabled, ai.model],
+  );
 
   const [status, setStatus] = useState<SaveState>('saved');
   const lastSavedMd = useRef('');
@@ -124,7 +147,9 @@ function NoteEditorInner({
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
     schema: blockNoteSchema,
-    dictionary: blockNoteZhCN,
+    // 注入 AI 词典；扩展仅在启用时挂载
+    dictionary: { ...blockNoteZhCN, ai: aiZh },
+    ...(aiExtension ? { extensions: [aiExtension] } : {}),
     uploadFile: async (file: File) => {
       const fd = new FormData();
       fd.append('file', file);
@@ -211,7 +236,43 @@ function NoteEditorInner({
       </header>
       <div className="flex-1 overflow-y-auto">
         <div className="px-1 py-6">
-          <BlockNoteView editor={editor} theme={mode} onChange={onChange} className="cn-editor" />
+          {aiExtension ? (
+            <BlockNoteView
+              editor={editor}
+              theme={mode}
+              onChange={onChange}
+              className="cn-editor"
+              formattingToolbar={false}
+              slashMenu={false}
+            >
+              {/* AI 命令菜单（含中文自定义命令） */}
+              <AIMenuController aiMenu={CloudNoteAIMenu} />
+              {/* 带 AI 按钮的自定义格式工具栏 */}
+              <FormattingToolbarController
+                formattingToolbar={() => (
+                  <FormattingToolbar>
+                    {...getFormattingToolbarItems()}
+                    <AIToolbarButton />
+                  </FormattingToolbar>
+                )}
+              />
+              {/* 带 /ai 项的自定义斜杠菜单 */}
+              <SuggestionMenuController
+                triggerCharacter="/"
+                getItems={async (query) =>
+                  filterSuggestionItems(
+                    [
+                      ...getDefaultReactSlashMenuItems(editor),
+                      ...getAISlashMenuItems(editor),
+                    ],
+                    query,
+                  )
+                }
+              />
+            </BlockNoteView>
+          ) : (
+            <BlockNoteView editor={editor} theme={mode} onChange={onChange} className="cn-editor" />
+          )}
         </div>
       </div>
     </div>

@@ -31,6 +31,15 @@ export interface ServerEnv {
   jwtExpiresHours: number;
   /** 允许的 CORS 来源；留空表示允许全部 */
   corsOrigin: string | undefined;
+  /** ── BlockNote AI（OpenAI 兼容）── */
+  /** LLM 服务端点（OpenAI 兼容），如 https://api.deepseek.com/v1 */
+  aiBaseUrl: string;
+  /** LLM API Key（仅服务端持有，不暴露给前端） */
+  aiApiKey: string;
+  /** 模型名，如 deepseek-chat / gpt-4o-mini / qwen2.5 */
+  aiModel: string;
+  /** 是否启用 AI（三者均非空才为 true） */
+  aiEnabled: boolean;
 }
 
 function isNonEmpty(v: string | undefined): v is string {
@@ -72,6 +81,12 @@ export function loadEnv(): ServerEnv {
   const jwtExpiresHours = coerceInt(process.env.JWT_EXPIRES_HOURS, 72);
   const corsOrigin = isNonEmpty(process.env.CORS_ORIGIN) ? process.env.CORS_ORIGIN : undefined;
 
+  // ── BlockNote AI（OpenAI 兼容）：三者均配置才启用 ──
+  const aiBaseUrl = isNonEmpty(process.env.AI_BASE_URL) ? process.env.AI_BASE_URL! : '';
+  const aiApiKey = isNonEmpty(process.env.AI_API_KEY) ? process.env.AI_API_KEY! : '';
+  const aiModel = isNonEmpty(process.env.AI_MODEL) ? process.env.AI_MODEL! : '';
+  const aiEnabled = aiBaseUrl.length > 0 && aiApiKey.length > 0 && aiModel.length > 0;
+
   return {
     nodeEnv,
     isProd: nodeEnv === 'production',
@@ -82,6 +97,10 @@ export function loadEnv(): ServerEnv {
     jwtSecret,
     jwtExpiresHours,
     corsOrigin,
+    aiBaseUrl,
+    aiApiKey,
+    aiModel,
+    aiEnabled,
   };
 }
 

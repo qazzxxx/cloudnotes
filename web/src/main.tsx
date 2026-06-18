@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '@blocknote/mantine/style.css';
+import '@blocknote/xl-ai/style.css';
 import '@blocknote/core/fonts/inter.css';
 import App from './App';
 import './index.css';

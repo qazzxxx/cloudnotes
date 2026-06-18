@@ -110,4 +110,7 @@ export const api = {
     const query = `path=${enc(fullPath)}${token ? `&token=${enc(token)}` : ''}`;
     return `/api/fs/asset?${query}`;
   },
+
+  /** BlockNote AI 配置：是否启用 + 模型名（不含密钥）。 */
+  aiConfig: () => request<{ enabled: boolean; model: string }>('/api/ai/config'),
 };

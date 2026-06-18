@@ -11,6 +11,7 @@ import { FsError } from './lib/paths';
 import { authRouter } from './routes/auth';
 import { fsRouter } from './routes/fs';
 import { healthRouter } from './routes/health';
+import { aiRouter } from './routes/ai';
 
 export function createApp(): Express {
   const app = express();
@@ -55,6 +56,9 @@ export function createApp(): Express {
 
   // ── 受保护接口：文件系统操作（需鉴权） ────────────────────
   app.use('/api/fs', requireAuth, fsRouter);
+
+  // ── 受保护接口：BlockNote AI 代理（需鉴权） ────────────────
+  app.use('/api/ai', requireAuth, aiRouter);
 
   // 未匹配的 /api/* → JSON 404（须在 SPA fallback 之前）
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Not Found' }));
