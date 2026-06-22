@@ -139,7 +139,7 @@ bump_versions "$VER"
 if ! git diff --quiet -- package.json web/package.json server/package.json extension/package.json extension/manifest.config.ts 2>/dev/null; then
   git add package.json web/package.json server/package.json extension/package.json extension/manifest.config.ts
   git commit -m "chore(release): $NEXT" >/dev/null
-  step "已提交版本号变更（chore(release): $NEXT）"
+  step "已提交版本号变更（chore(release): ${NEXT}）"
 fi
 
 step "创建 tag $NEXT …"
@@ -210,7 +210,7 @@ if command -v gh >/dev/null 2>&1; then
     warn "gh release create 失败（tag 已推送，Docker 镜像仍会构建；可稍后手动创建 Release）"
   fi
 else
-  warn "未安装 gh CLI，跳过 GitHub Release 创建。${ZIP:+插件 zip 已生成：$ZIP（可手动上传到 Release）}"
+  warn "未安装 gh CLI，跳过 GitHub Release 创建。${ZIP:+插件 zip 已生成：${ZIP}（可手动上传到 Release）}"
 fi
 rm -f "$NOTES_FILE"
 
