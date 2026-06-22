@@ -11,9 +11,19 @@ export default defineManifest({
   name: '云简剪藏 · CloudNote Clipper',
   version: '0.1.0',
   description: '一键把当前网页的标题、正文、图片/GIF 存进你的云简 CloudNote。',
+  icons: {
+    16: 'icons/icon-16.png',
+    48: 'icons/icon-48.png',
+    128: 'icons/icon-128.png',
+  },
   action: {
     default_popup: 'src/popup/popup.html',
     default_title: '保存到云简',
+    default_icon: {
+      16: 'icons/icon-16.png',
+      48: 'icons/icon-48.png',
+      128: 'icons/icon-128.png',
+    },
   },
   background: {
     service_worker: 'src/background.ts',
