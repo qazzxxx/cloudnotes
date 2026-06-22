@@ -198,7 +198,7 @@ NOTES_FILE="$(mktemp 2>/dev/null || mktemp -t cnrelease)"
 
 EOF
   if [ -n "$UPDATES" ]; then
-    printf '📝 **更新内容**（自 %s）：\n\n' "$SINCE_LABEL"
+    printf '📝 **更新内容**：\n\n' "$SINCE_LABEL"
     printf '%s\n' "$UPDATES"
   fi
 } > "$NOTES_FILE"
