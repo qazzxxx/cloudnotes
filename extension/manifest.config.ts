@@ -30,7 +30,7 @@ export default defineManifest({
     type: 'module',
   },
   options_page: 'src/options/options.html',
-  permissions: ['storage', 'tabs'],
+  permissions: ['storage', 'tabs', 'scripting', 'declarativeNetRequest'],
   host_permissions: ['<all_urls>'],
   content_scripts: [
     {

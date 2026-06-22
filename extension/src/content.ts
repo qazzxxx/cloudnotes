@@ -42,7 +42,9 @@ chrome.runtime.onMessage.addListener((rawMsg, _sender, sendResponse) => {
 /** 在页面上下文抓取图片字节，转 data URL 回传给 background（用于跨域/防盗链图片的后备抓取）。 */
 async function fetchImageAsDataUrl(url: string): Promise<string> {
   if (!url) throw new Error('empty url');
-  const res = await fetch(url, { credentials: 'include', cache: 'force-cache' });
+  // no-store 强制新请求（页面 <img> 的 no-cors 缓存是不透明、不可读的）；
+  // 配合 background 注入的 ACAO:*，跨域图床也能读到字节。
+  const res = await fetch(url, { credentials: 'omit', cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const buf = await res.arrayBuffer();
   const bytes = new Uint8Array(buf);
@@ -89,10 +91,34 @@ async function autoScroll(maxMs: number): Promise<void> {
 }
 
 async function extract(): Promise<ArticleData> {
-  const docClone = document.cloneNode(true) as Document;
-  const article = new Readability(docClone).parse();
-  const title = article?.title?.trim() || document.title.trim() || '未命名网页';
-  const html = article?.content ?? '';
+  // Readability 在「克隆文档」上跑。但部分页面装了 custom elements polyfill
+  //（@webcomponentsjs），document.cloneNode 造出的是游离文档（__CE_registry 为 null），
+  // Readability 一改它就会抛 "Cannot read properties of null (reading '__CE_registry')"。
+  // 故 try/catch 兜底：失败则直接读页面正文 HTML（在「活」文档上操作，不触发该 bug）。
+  let html = '';
+  let title = document.title.trim() || '未命名网页';
+  let byline = '';
+  try {
+    const docClone = document.cloneNode(true) as Document;
+    const article = new Readability(docClone).parse();
+    if (article?.content) {
+      html = article.content;
+      title = article.title?.trim() || title;
+      byline = article.byline?.trim() ?? '';
+    }
+  } catch (e) {
+    console.warn('[云简剪藏] Readability 失败，回退到原始正文提取', e);
+  }
+  // 回退：Readability 没拿到内容时，直接取页面正文区 HTML（论坛长帖等反而抓得更全）
+  if (!html) {
+    const node =
+      document.querySelector('article') ??
+      document.querySelector('main') ??
+      document.querySelector('#postlist') ?? // Discuz 等论坛帖子列表
+      document.querySelector('#content, .content, #wp_content') ??
+      document.body;
+    html = node?.innerHTML ?? '';
+  }
 
   if (!html) {
     return {
@@ -131,7 +157,7 @@ async function extract(): Promise<ArticleData> {
     markdown,
     imageUrls,
     url: location.href,
-    byline: article?.byline?.trim() ?? '',
+    byline,
   };
 }
 

@@ -25,13 +25,15 @@ export interface UploadResult {
 const base = (server: string) => server.replace(/\/+$/, '');
 const authHeaders = (token: string) => ({ Authorization: `Bearer ${token}` });
 
-async function errMsg(res: Response): Promise<string> {
+async function errMsg(res: Response, label: string): Promise<string> {
+  let detail: string;
   try {
     const d = (await res.json()) as { error?: string };
-    return d.error ?? `请求失败（${res.status}）`;
+    detail = d.error ? `${label}：${d.error}` : `${label}（${res.status}）`;
   } catch {
-    return `请求失败（${res.status}）`;
+    detail = `${label}（${res.status}）`;
   }
+  return `${detail}\n→ ${res.url}`; // 暴露实际请求的 URL，便于定位
 }
 
 /** 登录换取 JWT（开放模式 password 传空字符串即可）。 */
@@ -49,7 +51,7 @@ export async function login(server: string, password: string): Promise<string> {
 
 export async function getTree(server: string, token: string): Promise<TreeNode[]> {
   const res = await fetch(`${base(server)}/api/fs/tree`, { headers: authHeaders(token) });
-  if (!res.ok) throw new ApiError(res.status, await errMsg(res));
+  if (!res.ok) throw new ApiError(res.status, await errMsg(res, '读取目录失败'));
   const data = (await res.json()) as { tree?: TreeNode[] };
   return data.tree ?? [];
 }
@@ -61,7 +63,7 @@ export async function createDir(server: string, token: string, path: string): Pr
     headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify({ path, type: 'dir' }),
   });
-  if (!res.ok && res.status !== 409) throw new ApiError(res.status, await errMsg(res));
+  if (!res.ok && res.status !== 409) throw new ApiError(res.status, await errMsg(res, '创建文件夹失败'));
 }
 
 /** 上传图片/附件到 notePath 同级的 assets 目录，返回可嵌入 Markdown 的 relPath。 */
@@ -79,7 +81,7 @@ export async function uploadAsset(
     headers: authHeaders(token),
     body: fd,
   });
-  if (!res.ok) throw new ApiError(res.status, await errMsg(res));
+  if (!res.ok) throw new ApiError(res.status, await errMsg(res, '上传图片失败'));
   return (await res.json()) as UploadResult;
 }
 
@@ -95,5 +97,5 @@ export async function putNote(
     headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
   });
-  if (!res.ok) throw new ApiError(res.status, await errMsg(res));
+  if (!res.ok) throw new ApiError(res.status, await errMsg(res, '保存笔记失败'));
 }
