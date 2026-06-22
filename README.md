@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/hero.jpg" alt="云简 CloudNote" width="100%" />
+  <img src="docs/hero.png" alt="云简 CloudNote" width="100%" />
 </p>
 
 <h1 align="center">云简 · CloudNote</h1>
