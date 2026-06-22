@@ -7,6 +7,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# release artifacts (浏览器插件 zip 等，由 release.sh 生成)
+release/
+
 # env / secrets — never commit
 .env
 .env.*

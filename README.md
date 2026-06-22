@@ -47,8 +47,10 @@
 cloudnote/
 ├── server/            # @cloudnote/server — Express API + 文件系统操作
 ├── web/               # @cloudnote/web    — Vite + React 前端
+├── extension/         # @cloudnote/extension — 浏览器剪藏扩展（Chrome/Edge，MV3）
 ├── pnpm-workspace.yaml
 ├── docker-compose.yml
+├── release.sh         # 一键发版：tag → Docker 镜像 → 插件 zip → GitHub Release
 └── Dockerfile         # 多阶段构建：编译前端 → 单容器提供静态资源 + API
 ```
 
@@ -107,6 +109,31 @@ services:
       # 🔧 3. 左侧改为你 NAS 上实际存放笔记的目录（与步骤 1 一致）
       - ./notes:/data/notes
 ```
+
+### 🧩 浏览器剪藏扩展（可选）
+
+配套的 Chrome / Edge 扩展：**在任意网页点一下，把标题、正文、图片/GIF 一键存成云简笔记**（图片进笔记同级 `assets/`，存下来就是标准 Markdown，可在编辑器里继续编辑）。适合收藏长文、论坛帖子、教程等。
+
+**安装**（无需自行编译，直接下载打包好的）：
+
+1. 打开 [Releases 页](https://github.com/qazzxxx/cloudnotes/releases/latest)，下载本版本附带的 `cloudnote-clipper-vX.X.X.zip` 并解压。
+2. Chrome / Edge 打开 `chrome://extensions`（或 `edge://extensions`），右上角开启「**开发者模式**」。
+3. 点「**加载已解压的扩展程序**」，选中解压出来的文件夹（含 `manifest.json` 那一层）。
+4. 点扩展图标 → 「设置」，填写：
+   - **服务器地址**：你的云简 API 地址，如 `http://你的NAS-IP:3130`（本地开发填 `http://localhost:3130`）。⚠️ 不要填前端页面地址（如 `:5173`），要填 **API 后端**。
+   - **密码**：云简登录密码（开放模式留空）。
+   - **存放文件夹**：剪藏笔记存到哪个文件夹，默认「网页剪藏」。
+   - 点「测试连接」确认能通。
+5. 打开任意网页 → 点扩展图标 → 「保存到云简」。存完后该页就变成一篇笔记了。
+
+**能力**：
+
+- **自动滚动收集**：保存前自动滚到底，把无限滚动 / 瀑布流 / 论坛长帖的懒加载内容与图片都加载出来（可在设置开关、限时长）。
+- **懒加载图片**：识别 `data-src` / `srcset` 等懒加载属性，正文里写的是真实地址。
+- **跨域图床**：通过 `declarativeNetRequest` 临时注入 CORS 头，能抓取无 CORS 头的第三方图床图片。
+- **智能去重**：同名笔记自动加 `-2` / `-3` 后缀，不会覆盖。
+
+> 想自行从源码构建：`pnpm --filter @cloudnote/extension build`，产物在 `extension/dist/`，加载方式同上。
 
 ### 备份 / 迁移
 
