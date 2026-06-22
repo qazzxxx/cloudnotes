@@ -57,7 +57,22 @@ function isAncestorOrSelf(ancestor: string, descendant: string): boolean {
   return descendant === ancestor || descendant.startsWith(`${ancestor}/`);
 }
 
+/** 递归收集树里所有的 .md 笔记（扁平化，用于搜索）。 */
+function collectNotes(nodes: TreeNode[]): TreeNode[] {
+  const acc: TreeNode[] = [];
+  const walk = (list: TreeNode[]) => {
+    for (const n of list) {
+      if (n.type === 'file' && n.name.toLowerCase().endsWith('.md')) acc.push(n);
+      if (n.children?.length) walk(n.children);
+    }
+  };
+  walk(nodes);
+  return acc;
+}
+
 interface FileTreeProps {
+  /** 搜索关键词（非空时文件树切换为扁平的搜索结果列表） */
+  query: string;
   creating: CreatingEntry | null;
   setCreating: (c: CreatingEntry | null) => void;
   /** 移动端选中后关闭抽屉 */
@@ -82,7 +97,7 @@ type ContextMenuItem =
  * - 拖拽移动（@dnd-kit）：支持跨文件夹移动，悬停自动展开，禁掉非法目标；
  * - 选中行以主色高亮，悬浮优雅背景反馈。
  */
-export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
+export function FileTree({ query, creating, setCreating, onNavigate }: FileTreeProps) {
   const { tree, selected, setSelected, create, rename, remove } = useNotes();
   const { message, modal } = App.useApp();
 
@@ -303,6 +318,13 @@ export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
     />
   );
 
+  // 搜索：非空 query 时把树扁平成匹配的笔记列表
+  const q = query.trim().toLowerCase();
+  const searching = q.length > 0;
+  const results = searching
+    ? collectNotes(tree).filter((n) => titleOf(n.name).toLowerCase().includes(q))
+    : [];
+
   // 菜单：右键 / 长按
   const buildMenu = (node: TreeNode | null): ContextMenuItem[] => {
     if (!node) {
@@ -389,7 +411,23 @@ export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
           onRootContextMenu={openRootMenu}
           onRootLongPress={openRootMenu}
         >
-        {tree.length === 0 ? (
+        {searching ? (
+          results.length === 0 ? (
+            <div className="px-3 py-6 text-center text-[13px] text-gray-400">无匹配的笔记</div>
+          ) : (
+            results.map((n) => (
+              <SearchResultRow
+                key={n.path}
+                node={n}
+                selected={selected}
+                onPick={() => {
+                  setSelected(n.path);
+                  onNavigate?.();
+                }}
+              />
+            ))
+          )
+        ) : tree.length === 0 ? (
           <EmptyState
             creating={creating}
             onCommitCreate={commitCreate}
@@ -424,6 +462,45 @@ export function FileTree({ creating, setCreating, onNavigate }: FileTreeProps) {
         />
       )}
       </DndContext>
+    </div>
+  );
+}
+
+/** 搜索结果行：扁平展示一篇笔记（标题 + 所属目录），点击打开。 */
+function SearchResultRow({
+  node,
+  selected,
+  onPick,
+}: {
+  node: TreeNode;
+  selected: string | null;
+  onPick: () => void;
+}) {
+  const title = titleOf(node.name);
+  const parent = parentOf(node.path);
+  const isSelected = node.path === selected;
+  return (
+    <div
+      onClick={onPick}
+      className="group flex cursor-pointer items-center gap-2 rounded-lg pr-2 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+      style={{
+        height: 40,
+        paddingLeft: BASE_PAD,
+        ...(isSelected
+          ? {
+              background: 'color-mix(in srgb, var(--ant-color-primary) 13%, transparent)',
+              color: 'var(--ant-color-primary)',
+            }
+          : {}),
+      }}
+    >
+      <FileTextOutlined className="text-[14px] leading-none text-gray-400" />
+      <div className="flex min-w-0 flex-1 flex-col leading-tight">
+        <span className={`truncate text-[13px] ${isSelected ? 'font-medium' : ''}`} title={node.name}>
+          {title}
+        </span>
+        {parent !== null && <span className="truncate text-[11px] text-gray-400">{parent}</span>}
+      </div>
     </div>
   );
 }
