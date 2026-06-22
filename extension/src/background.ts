@@ -44,13 +44,17 @@ async function makeAuth(server: string, password: string) {
   return { req };
 }
 
+type SaveOutcome =
+  | { ok: true; notePath: string; skipped: number; total: number }
+  | { ok: false; error: string };
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   const m = msg as SaveMessage;
   if (m?.type !== 'CN_SAVE') return;
   onSave()
     .then(
-      (notePath) => finish(true, notePath),
-      (e) => finish(false, undefined, e instanceof Error ? e.message : String(e)),
+      (r) => finish({ ok: true, notePath: r.notePath, skipped: r.skipped, total: r.total }),
+      (e) => finish({ ok: false, error: e instanceof Error ? e.message : String(e) }),
     );
   return true; // 异步响应（ack）
 });
@@ -62,14 +66,14 @@ function progress(text: string): void {
   });
 }
 
-function finish(ok: boolean, notePath?: string, error?: string): void {
-  const rm: ResultMessage = { type: 'CN_RESULT', ok, notePath, error };
+function finish(o: SaveOutcome): void {
+  const rm: ResultMessage = { type: 'CN_RESULT', ...o };
   chrome.runtime.sendMessage(rm).catch(() => {
     /* popup 可能已关 */
   });
 }
 
-async function onSave(): Promise<string> {
+async function onSave(): Promise<{ notePath: string; skipped: number; total: number }> {
   const cfg = await getConfig();
   if (!cfg.server) throw new Error('请先在扩展设置里填写云简服务器地址');
 
@@ -79,8 +83,11 @@ async function onSave(): Promise<string> {
     throw new Error('请在普通网页（http/https）上使用，不支持浏览器内置页面');
   }
 
-  progress('正在提取网页…');
-  const resp = await extractFromTab(tab.id);
+  progress('正在加载与提取网页…');
+  const resp = await extractFromTab(tab.id, {
+    autoScroll: cfg.autoScroll,
+    maxMs: cfg.autoScrollMaxMs,
+  });
   if (!resp.ok) throw new Error(resp.error);
   const data = resp.data;
 
@@ -93,21 +100,26 @@ async function onSave(): Promise<string> {
   const existing = collectPaths(tree);
   const notePath = uniqueNotePath(existing, folder, sanitizeTitle(data.title));
 
-  // 逐张抓取并上传图片（跨域在 background 抓取，受 host_permissions 保护）
+  // 逐张抓取并上传图片：先 background 直接抓（带 cookie + 缓存优先），
+  // 失败则回退到页面上下文抓（绕过登录/防盗链）。仍失败才跳过。
   const urlToRel = new Map<string, string>();
   const total = data.imageUrls.length;
   let idx = 0;
+  let skipped = 0;
   for (const imgUrl of data.imageUrls) {
     idx += 1;
-    progress(total > 0 ? `上传图片 ${idx}/${total}` : '处理中…');
+    progress(total > 0 ? `抓取/上传图片 ${idx}/${total}` : '处理中…');
     try {
-      const blob = await fetchBlob(imgUrl);
+      const blob = await fetchBlob(imgUrl, tab.id);
       const ext = pickExt(imgUrl, blob);
-      if (!ALLOWED_EXTS.has(ext) || blob.size > MAX_BYTES) continue;
+      if (!ALLOWED_EXTS.has(ext) || blob.size > MAX_BYTES) {
+        skipped += 1;
+        continue;
+      }
       const up = await req((s, t) => uploadAsset(s, t, notePath, blob, fileName(imgUrl, ext)));
       urlToRel.set(imgUrl, up.relPath);
     } catch {
-      /* 单张失败跳过，不中断整体 */
+      skipped += 1; // 单张失败跳过，不中断整体
     }
   }
 
@@ -121,7 +133,7 @@ async function onSave(): Promise<string> {
 
   progress('正在保存笔记…');
   await req((s, t) => putNote(s, t, notePath, content));
-  return notePath;
+  return { notePath, skipped, total };
 }
 
 async function activeTab(): Promise<chrome.tabs.Tab | undefined> {
@@ -129,16 +141,39 @@ async function activeTab(): Promise<chrome.tabs.Tab | undefined> {
   return tab;
 }
 
-function extractFromTab(tabId: number): Promise<ExtractResponse> {
-  return chrome.tabs.sendMessage(tabId, { type: 'CN_EXTRACT' }).catch(() => {
-    throw new Error('无法与页面通信：请刷新当前页面后重试（扩展刚安装/更新时，已打开的页面需刷新才会注入内容脚本）。');
-  });
+function extractFromTab(
+  tabId: number,
+  opts: { autoScroll: boolean; maxMs: number },
+): Promise<ExtractResponse> {
+  return chrome.tabs
+    .sendMessage(tabId, { type: 'CN_EXTRACT', ...opts })
+    .catch(() => {
+      throw new Error('无法与页面通信：请刷新当前页面后重试（扩展刚安装/更新时，已打开的页面需刷新才会注入内容脚本）。');
+    });
 }
 
-async function fetchBlob(url: string): Promise<Blob> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`图片请求失败（${res.status}）`);
-  return await res.blob();
+async function fetchBlob(url: string, tabId: number): Promise<Blob> {
+  // 1) background 直接抓：带登录 cookie + 缓存优先。
+  //    图片常已被 <img> 加载过，命中缓存即可直接拿到字节，绕过登录/防盗链/CORS。
+  try {
+    const res = await fetch(url, { credentials: 'include', cache: 'force-cache' });
+    if (res.ok) {
+      const blob = await res.blob();
+      // 防盗链有时返回 200 + HTML 错误页，过滤掉
+      if (blob.size > 0 && !blob.type.startsWith('text/html')) return blob;
+    }
+  } catch {
+    /* 落到页面抓取兜底 */
+  }
+  // 2) 回退到页面上下文抓取（同源 cookie + 正确 Referer），处理 blob:/需登录/防盗链的图片
+  const r = (await chrome.tabs
+    .sendMessage(tabId, { type: 'CN_FETCH_IMAGE', url })
+    .catch(() => null)) as { ok: boolean; dataUrl?: string } | null;
+  if (r?.ok && r.dataUrl) {
+    const res2 = await fetch(r.dataUrl);
+    return await res2.blob();
+  }
+  throw new Error('图片抓取失败');
 }
 
 /** 从 URL 路径推断扩展名，回退到 blob 的 MIME。 */

@@ -26,6 +26,9 @@ body {
 header { display: flex; align-items: center; gap: 8px; font-size: 16px; }
 
 .field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.field.check { flex-direction: row; align-items: flex-start; gap: 8px; }
+.field.check input { width: auto; margin-top: 3px; }
+.field.check span { line-height: 1.5; color: #6b7280; }
 .field input {
   padding: 8px 10px;
   font-size: 13px;

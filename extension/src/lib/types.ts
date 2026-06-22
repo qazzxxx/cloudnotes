@@ -26,4 +26,8 @@ export interface ResultMessage {
   ok: boolean;
   notePath?: string;
   error?: string;
+  /** 图片总数 */
+  total?: number;
+  /** 抓取/上传失败的图片数 */
+  skipped?: number;
 }

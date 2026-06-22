@@ -13,7 +13,16 @@ chrome.runtime.onMessage.addListener((msg) => {
   } else if (m.type === 'CN_RESULT') {
     const r = m as ResultMessage;
     saveBtn.disabled = false;
-    setStatus(r.ok ? `✅ 已保存：${r.notePath}` : `❌ ${r.error ?? '保存失败'}`, true);
+    if (r.ok) {
+      let msg = `✅ 已保存：${r.notePath}`;
+      if (r.total && r.total > 0) {
+        const ok = r.total - (r.skipped ?? 0);
+        msg += `\n🖼️ 图片 ${ok}/${r.total}${r.skipped ? `（跳过 ${r.skipped} 张）` : ''}`;
+      }
+      setStatus(msg, true);
+    } else {
+      setStatus(`❌ ${r.error ?? '保存失败'}`, true);
+    }
   }
 });
 

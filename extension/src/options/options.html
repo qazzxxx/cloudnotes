@@ -27,6 +27,16 @@
         <input id="folder" placeholder="网页剪藏" autocomplete="off" />
       </label>
 
+      <label class="field check">
+        <input id="autoScroll" type="checkbox" />
+        <span>保存前自动滚动页面，加载无限滚动 / 懒加载的完整内容（论坛长帖、瀑布流）</span>
+      </label>
+
+      <label class="field">
+        <span>自动滚动最长时长（秒，到点即停；普通文章会提前结束）</span>
+        <input id="autoScrollSec" type="number" min="0" max="120" step="1" placeholder="8" />
+      </label>
+
       <div class="row">
         <button id="save" class="primary">保存</button>
         <button id="test" class="ghost">测试连接</button>

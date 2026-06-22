@@ -5,9 +5,13 @@ const KEYS = {
   password: 'cn_password',
   folder: 'cn_folder',
   token: 'cn_token',
+  autoScroll: 'cn_autoscroll',
+  autoScrollMaxMs: 'cn_autoscroll_maxms',
 } as const;
 
 const DEFAULT_FOLDER = '网页剪藏';
+const DEFAULT_AUTO_SCROLL = true;
+const DEFAULT_AUTO_SCROLL_MAX_MS = 8000;
 
 export interface Config {
   /** 云简服务地址，如 http://nas-ip:3130（无尾斜杠） */
@@ -16,6 +20,10 @@ export interface Config {
   password: string;
   /** 剪藏笔记存放文件夹（笔记相对路径第一段） */
   folder: string;
+  /** 保存前是否自动滚动页面，加载无限滚动/懒加载的完整内容 */
+  autoScroll: boolean;
+  /** 自动滚动的最长耗时（毫秒），到点即停 */
+  autoScrollMaxMs: number;
 }
 
 export async function getConfig(): Promise<Config> {
@@ -24,6 +32,12 @@ export async function getConfig(): Promise<Config> {
     server: (v[KEYS.server] as string | undefined)?.trim() ?? '',
     password: (v[KEYS.password] as string | undefined) ?? '',
     folder: (v[KEYS.folder] as string | undefined)?.trim() || DEFAULT_FOLDER,
+    autoScroll:
+      v[KEYS.autoScroll] === undefined ? DEFAULT_AUTO_SCROLL : v[KEYS.autoScroll] === true,
+    autoScrollMaxMs:
+      Number(v[KEYS.autoScrollMaxMs]) > 0
+        ? Number(v[KEYS.autoScrollMaxMs])
+        : DEFAULT_AUTO_SCROLL_MAX_MS,
   };
 }
 
@@ -32,6 +46,9 @@ export async function setConfig(patch: Partial<Config>): Promise<void> {
   if (patch.server !== undefined) up[KEYS.server] = patch.server.trim();
   if (patch.password !== undefined) up[KEYS.password] = patch.password;
   if (patch.folder !== undefined) up[KEYS.folder] = patch.folder.trim() || DEFAULT_FOLDER;
+  if (patch.autoScroll !== undefined) up[KEYS.autoScroll] = patch.autoScroll;
+  if (patch.autoScrollMaxMs !== undefined && patch.autoScrollMaxMs > 0)
+    up[KEYS.autoScrollMaxMs] = patch.autoScrollMaxMs;
   await chrome.storage.local.set(up);
 }
 
