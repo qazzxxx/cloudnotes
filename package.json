@@ -12,6 +12,8 @@
     "dev": "pnpm -r --parallel --stream run dev",
     "dev:server": "pnpm --filter @cloudnote/server dev",
     "dev:web": "pnpm --filter @cloudnote/web dev",
+    "ext:build": "pnpm --filter @cloudnote/extension build",
+    "ext:dev": "pnpm --filter @cloudnote/extension dev",
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm -r run typecheck",

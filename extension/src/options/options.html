@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>云简剪藏 · 设置</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <img src="../shared/logo.svg" alt="" width="24" height="24" />
+        <strong>云简剪藏 · 设置</strong>
+      </header>
+
+      <label class="field">
+        <span>云简服务器地址</span>
+        <input id="server" placeholder="http://nas-ip:3130" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span>密码（开放模式留空）</span>
+        <input id="password" type="password" placeholder="留空 = 开放模式" autocomplete="off" />
+      </label>
+
+      <label class="field">
+        <span>存放文件夹</span>
+        <input id="folder" placeholder="网页剪藏" autocomplete="off" />
+      </label>
+
+      <div class="row">
+        <button id="save" class="primary">保存</button>
+        <button id="test" class="ghost">测试连接</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <p class="hint">
+        网页会以 Markdown 笔记形式存入该文件夹（笔记名 = 网页标题，重名自动加 -2/-3）；
+        图片/GIF 上传到笔记同级 <code>assets/</code>，在云简里可直接编辑。
+      </p>
+    </div>
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>
