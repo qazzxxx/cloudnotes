@@ -31,6 +31,11 @@
   <img src="docs/preview-2.jpg" width="90%" alt="云简编辑器" />
 </p>
 
+
+<p align="center">
+  <img src="docs/preview-3.jpg" width="90%" alt="AI协助编辑" />
+</p>
+
 ## 🚀 部署（Docker · 推荐）
 
 适用：群晖 / 威联通 / unRAID / 其他能跑 Docker 的 NAS 或 Linux 小主机。镜像已发布到 Docker Hub（`qazzxxx/cloudnotes`，amd64/arm64），**无需本地构建**。
