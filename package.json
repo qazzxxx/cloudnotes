@@ -1,6 +1,6 @@
 {
   "name": "cloudnote",
-  "version": "0.1.0",
+  "version": "0.0.6",
   "private": true,
   "description": "云简 (CloudNote) — 纯文件系统驱动的轻量级 Markdown 笔记/文档管理系统，专为 NAS 极客与开发者设计。",
   "license": "MIT",

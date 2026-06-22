@@ -1,6 +1,6 @@
 {
   "name": "@cloudnote/web",
-  "version": "0.1.0",
+  "version": "0.0.6",
   "private": true,
   "type": "module",
   "description": "云简 CloudNote — Vite + React + Ant Design + Tailwind 前端",

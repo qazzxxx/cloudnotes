@@ -9,7 +9,7 @@ import { defineManifest } from '@crxjs/vite-plugin';
 export default defineManifest({
   manifest_version: 3,
   name: '云简剪藏 · CloudNote Clipper',
-  version: '0.1.0',
+  version: '0.0.6',
   description: '一键把当前网页的标题、正文、图片/GIF 存进你的云简 CloudNote。',
   icons: {
     16: 'icons/icon-16.png',

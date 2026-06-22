@@ -1,6 +1,6 @@
 {
   "name": "@cloudnote/server",
-  "version": "0.1.0",
+  "version": "0.0.6",
   "private": true,
   "description": "云简 CloudNote — Express 后端，纯文件系统驱动",
   "type": "commonjs",

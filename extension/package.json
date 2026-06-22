@@ -1,6 +1,6 @@
 {
   "name": "@cloudnote/extension",
-  "version": "0.1.0",
+  "version": "0.0.6",
   "private": true,
   "description": "云简 CloudNote 浏览器剪藏扩展 —— 把网页标题/正文/图片一键存进云简",
   "type": "module",
