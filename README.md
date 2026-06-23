@@ -38,9 +38,9 @@
 
 ## 🚀 部署（Docker · 推荐）
 
-适用：群晖 / 威联通 / unRAID / 其他能跑 Docker 的 NAS 或 Linux 小主机。镜像已发布到 Docker Hub（`qazzxxx/cloudnotes`，amd64/arm64），**无需本地构建**。
+适用：群晖 / 威联通 / unRAID / 其他能跑 Docker 的 NAS 或 Linux 小主机。镜像已发布到 Docker Hub（`qazzxxx/cloudnotes`，amd64/arm64）。
 
-把下面内容存为 `docker-compose.yml`，按提示改 2 处（密码 / 笔记目录），再 `docker compose up -d` 即可（`PORT` / `ROOT_SPACE` / `NODE_ENV` 等已在镜像内置，无需再填）：
+把下面内容存为 `docker-compose.yml`，按提示改 2 处（密码 / 笔记目录），再 `docker compose up -d` 即可：
 
 ```yaml
 # 云简 —— 一键部署

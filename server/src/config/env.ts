@@ -40,6 +40,8 @@ export interface ServerEnv {
   aiModel: string;
   /** 是否启用 AI（三者均非空才为 true） */
   aiEnabled: boolean;
+  /** AI 最大输出 token（推理模型需设大；默认 8192，可通过 AI_MAX_TOKENS 调整） */
+  aiMaxTokens: number;
 }
 
 function isNonEmpty(v: string | undefined): v is string {
@@ -86,6 +88,7 @@ export function loadEnv(): ServerEnv {
   const aiApiKey = isNonEmpty(process.env.AI_API_KEY) ? process.env.AI_API_KEY! : '';
   const aiModel = isNonEmpty(process.env.AI_MODEL) ? process.env.AI_MODEL! : '';
   const aiEnabled = aiBaseUrl.length > 0 && aiApiKey.length > 0 && aiModel.length > 0;
+  const aiMaxTokens = coerceInt(process.env.AI_MAX_TOKENS, 8192);
 
   return {
     nodeEnv,
@@ -101,6 +104,7 @@ export function loadEnv(): ServerEnv {
     aiApiKey,
     aiModel,
     aiEnabled,
+    aiMaxTokens,
   };
 }
 

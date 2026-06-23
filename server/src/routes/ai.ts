@@ -28,6 +28,14 @@ aiRouter.post(
     }
     const target = `${env.aiBaseUrl.replace(/\/+$/, '')}/chat/completions`;
 
+    // 注入 max_tokens：BlockNote 0.51.4 客户端不设 maxOutputTokens，
+    // 推理模型（如 MiniMax-M2）的 <think> 会吃掉默认预算 → 正文/工具调用被截断 → 只写一行。
+    // 服务端强制注入大值，给推理 + 完整正文留足空间。
+    const body = { ...(req.body ?? {}) } as Record<string, unknown>;
+    if (body.max_tokens == null && body.max_output_tokens == null) {
+      body.max_tokens = env.aiMaxTokens;
+    }
+
     const upstream = await fetch(target, {
       method: 'POST',
       headers: {
@@ -35,7 +43,7 @@ aiRouter.post(
         Accept: 'text/event-stream',
         Authorization: `Bearer ${env.aiApiKey}`,
       },
-      body: JSON.stringify(req.body ?? {}),
+      body: JSON.stringify(body),
     });
 
     // 透传状态码与响应类型；关闭缓冲保证 SSE 实时
