@@ -15,7 +15,7 @@
 
 ---
 
-- ✨ **内置 AI 助手**：：接入任意 OpenAI 兼容大模型，选中文本即可润色 / 总结 / 续写 / 纠错。
+- ✨ **内置 AI 助手**：接入任意 OpenAI 兼容大模型，选中文本即可润色 / 总结 / 续写 / 纠错。
 - 🗂️ **零数据库**：不依赖 MySQL / SQLite，所有数据以纯 `.md` 文本与原始目录层级直接落盘。
 - 🔒 **100% 数据主权**：笔记就是硬盘上的普通文件，任意同步盘 / `rsync` / Git 即可备份与迁移。
 - 🧩 **浏览器剪藏扩展**：配套 Chrome / Edge 扩展，一键把网页标题 / 正文 / 图片存成笔记。
@@ -40,7 +40,7 @@
 
 适用：群晖 / 威联通 / unRAID / 其他能跑 Docker 的 NAS 或 Linux 小主机。镜像已发布到 Docker Hub（`qazzxxx/cloudnotes`，amd64/arm64），**无需本地构建**。
 
-把下面内容存为 `docker-compose.yml`，按提示改 3 处（密码 / JWT 密钥 / 笔记目录），再 `docker compose up -d` 即可：
+把下面内容存为 `docker-compose.yml`，按提示改 2 处（密码 / 笔记目录），再 `docker compose up -d` 即可（`PORT` / `ROOT_SPACE` / `NODE_ENV` 等已在镜像内置，无需再填）：
 
 ```yaml
 # 云简 —— 一键部署
@@ -52,21 +52,14 @@ services:
     ports:
       - "3130:3130"                    # 宿主机端口，按需改
     environment:
-      NODE_ENV: production
-      ROOT_SPACE: /data/notes
-      PORT: "3130"
-      NAS_PASSWORD: "your_secure_password_here"   # 🔧 1. 登录密码（首次登录用）
-      JWT_SECRET: ""                              # 🔧 2. 建议填长随机串（openssl rand -hex 32）；留空则重启后 token 失效
-      JWT_EXPIRES_HOURS: "72"
-      CORS_ORIGIN: ""
+      NAS_PASSWORD: "your_secure_password_here"   # 🔧 1. 登录密码（留空 = 开放模式）
       # ── AI 助手（可选，OpenAI 兼容）── 三项都填才启用；留空 = 编辑器无 AI。Key 仅存服务端。
-      # DeepSeek: AI_BASE_URL=https://api.deepseek.com/v1 / AI_MODEL=deepseek-chat
-      # MiniMax:  AI_BASE_URL=https://api.minimaxi.com/v1 / AI_MODEL=MiniMax-M2.7
       AI_BASE_URL: ""
       AI_API_KEY: ""
       AI_MODEL: ""
+      # 其余可选项（JWT_SECRET / CORS_ORIGIN 等）见 .env.example，不填即用默认值。
     volumes:
-      - ./notes:/data/notes             # 🔧 3. 改为你 NAS 上实际存放笔记的目录
+      - ./notes:/data/notes             # 🔧 2. 改为你 NAS 上实际存放笔记的目录
 ```
 
 ```bash
