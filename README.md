@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/hero.png" alt="云简 CloudNote" width="100%" />
+  <img src="docs/hero.png" alt="云简" width="100%" />
 </p>
 
-<h1 align="center">云简 · CloudNote</h1>
+<h1 align="center">云简</h1>
 
 <p align="center"><em>执笔云上，简纳万千</em> · 纯文件系统驱动的轻量级 Markdown 笔记系统，专为 NAS 极客与开发者设计。</p>
 
@@ -15,7 +15,7 @@
 
 ---
 
-- ✨ **内置 AI 助手**：接入任意 OpenAI 兼容大模型（DeepSeek / MiniMax / OpenAI / 本地 Ollama），选中文本即可润色 / 总结 / 续写 / 纠错，Key 仅存服务端、不暴露给前端。
+- ✨ **内置 AI 助手**：：接入任意 OpenAI 兼容大模型，选中文本即可润色 / 总结 / 续写 / 纠错。
 - 🗂️ **零数据库**：不依赖 MySQL / SQLite，所有数据以纯 `.md` 文本与原始目录层级直接落盘。
 - 🔒 **100% 数据主权**：笔记就是硬盘上的普通文件，任意同步盘 / `rsync` / Git 即可备份与迁移。
 - 🧩 **浏览器剪藏扩展**：配套 Chrome / Edge 扩展，一键把网页标题 / 正文 / 图片存成笔记。
@@ -43,7 +43,7 @@
 把下面内容存为 `docker-compose.yml`，按提示改 3 处（密码 / JWT 密钥 / 笔记目录），再 `docker compose up -d` 即可：
 
 ```yaml
-# 云简 CloudNote —— 一键部署
+# 云简 —— 一键部署
 services:
   cloudnote:
     image: qazzxxx/cloudnotes:latest   # 自动拉取最新镜像
